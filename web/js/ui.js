@@ -69,11 +69,14 @@ function updateTable(items) {
 }
 
 function addTrack(table, track) {
+    // Duration comes from Spotify track data, not audio features
+    var duration = track.duration_ms ? formatDuration(Math.round(track.duration_ms / 1000.0)) : '';
+    var relDate = '';
+    if (track.album && track.album.id && track.album.id in albumDates) {
+        relDate = albumDates[track.album.id];
+    }
+
     if (track && track.enInfo && 'tempo' in track.enInfo) {
-        var relDate = '';
-        if (track.album.id in albumDates) {
-            relDate = albumDates[track.album.id];
-        }
         table.row.add([
             track.which + 1,
             track.name,
@@ -84,7 +87,7 @@ function addTrack(table, track) {
             Math.round(track.enInfo.danceability * 100),
             Math.round(track.enInfo.loudness),
             Math.round(track.enInfo.valence * 100),
-            formatDuration(Math.round(track.enInfo.duration_ms / 1000.0)),
+            duration,
             Math.round(track.enInfo.acousticness * 100),
             Math.round(track.popularity),
             Math.round(track.smart),
@@ -92,19 +95,20 @@ function addTrack(table, track) {
             track
         ]);
     } else {
+        console.log('Track missing audio features:', track.id, track.name, '-', track.artists[0].name);
         table.row.add([
             track.which + 1,
             track.name,
             track.artists[0].name,
+            relDate,
             '',
             '',
             '',
             '',
             '',
+            duration,
             '',
-            '',
-            '',
-            '',
+            Math.round(track.popularity),
             '',
             '',
             track

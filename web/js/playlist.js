@@ -150,16 +150,22 @@ function fetchPlaylistTracks(playlist) {
                     }
                 });
 
+                // Log stats for audio features fetching
+                var requestedIds = [];
+                var matchedCount = 0;
                 _.each(tracks.items, function(item, i) {
                     if (item.track && item.track.id) {
                         var tid = item.track.id;
+                        requestedIds.push(tid);
                         if (tid in fmap) {
                             item.track.enInfo = fmap[tid];
+                            matchedCount++;
                         } else {
                             item.track.enInfo = {};
                         }
                     }
                 });
+                console.log('Audio features: ' + matchedCount + '/' + requestedIds.length + ' tracks matched');
                 updateTable(tracks.items);
 
                 if (tracks.next) {

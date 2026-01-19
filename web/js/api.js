@@ -109,10 +109,10 @@ function fetchReccoBeats(url) {
     });
 }
 
-// Fetch audio features from ReccoBeats (replacement for Spotify's restricted endpoint)
-function fetchAudioFeatures(ids) {
+// Fetch audio features for a single batch from ReccoBeats
+function fetchAudioFeaturesBatch(ids) {
     if (ids.length === 0) {
-        return Q.resolve({ audio_features: [] });
+        return Q.resolve([]);
     }
 
     var cids = ids.join(',');
@@ -121,31 +121,24 @@ function fetchAudioFeatures(ids) {
     return fetchReccoBeats(lookupUrl)
         .then(function(trackData) {
             if (!trackData || !trackData.content || trackData.content.length === 0) {
-                return { audio_features: [] };
+                return [];
             }
-
-            // Build mapping from Spotify ID to ReccoBeats ID
-            var spotifyToRecco = {};
-            trackData.content.forEach(function(track) {
-                var spotifyId = track.href.split('/').pop();
-                spotifyToRecco[spotifyId] = track.id;
-            });
 
             // Get ReccoBeats IDs
             var reccoIds = trackData.content.map(function(t) { return t.id; });
             if (reccoIds.length === 0) {
-                return { audio_features: [] };
+                return [];
             }
 
             var featuresUrl = "https://api.reccobeats.com/v1/audio-features?ids=" + reccoIds.join(',');
             return fetchReccoBeats(featuresUrl)
                 .then(function(featuresData) {
                     if (!featuresData || !featuresData.content) {
-                        return { audio_features: [] };
+                        return [];
                     }
 
                     // Map back to Spotify IDs for compatibility
-                    var features = featuresData.content.map(function(f) {
+                    return featuresData.content.map(function(f) {
                         var spotifyId = f.href.split('/').pop();
                         return {
                             id: spotifyId,
@@ -162,8 +155,40 @@ function fetchAudioFeatures(ids) {
                             mode: f.mode
                         };
                     });
-                    return { audio_features: features };
                 });
+        })
+        .catch(function(err) {
+            console.log('ReccoBeats batch fetch failed:', err);
+            return [];
+        });
+}
+
+// Fetch audio features from ReccoBeats with batching
+function fetchAudioFeatures(ids) {
+    if (ids.length === 0) {
+        return Q.resolve({ audio_features: [] });
+    }
+
+    // Batch requests to avoid URL length limits (20 IDs per request)
+    var maxIdsPerCall = 20;
+    var batches = [];
+    for (var i = 0; i < ids.length; i += maxIdsPerCall) {
+        batches.push(ids.slice(i, i + maxIdsPerCall));
+    }
+
+    // Fetch all batches in parallel
+    var batchPromises = batches.map(function(batch) {
+        return fetchAudioFeaturesBatch(batch);
+    });
+
+    return Q.all(batchPromises)
+        .then(function(results) {
+            // Flatten all batch results into one array
+            var allFeatures = [];
+            results.forEach(function(batchFeatures) {
+                allFeatures = allFeatures.concat(batchFeatures);
+            });
+            return { audio_features: allFeatures };
         })
         .catch(function(err) {
             console.log('ReccoBeats fetch failed, returning empty features:', err);
