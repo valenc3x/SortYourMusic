@@ -122,7 +122,17 @@ function fetchPlaylistTracks(playlist) {
                         console.log('no track at', i);
                     }
                 });
-                return Q.all([fetchAllAlbums(aids), fetchAudioFeatures(ids)]);
+
+                // Show progress bar for audio features loading
+                if (ids.length > 0) {
+                    showProgress("Loading audio features...");
+                }
+
+                var progressCallback = function(current, total) {
+                    updateProgress(current, total);
+                };
+
+                return Q.all([fetchAllAlbums(aids), fetchAudioFeatures(ids, progressCallback)]);
             })
             .then(function(results) {
                 var allAlbums = results[0];
@@ -166,6 +176,7 @@ function fetchPlaylistTracks(playlist) {
                     }
                 });
                 console.log('Audio features: ' + matchedCount + '/' + requestedIds.length + ' tracks matched');
+                hideProgress();
                 updateTable(tracks.items);
 
                 if (tracks.next) {

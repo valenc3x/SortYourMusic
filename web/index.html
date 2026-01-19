@@ -156,9 +156,15 @@
                 </div>
           </div>
 
-          <div class="worker" id='single-playlist'> 
+          <div class="worker" id='single-playlist'>
                 <h2> <a id='playlist-title'></a> </h2>
                 <img class='spinner2' width='100' alt='spinner' src='images/ajaxSpinner.gif'>
+                <div id="audio-features-progress" style="display:none; max-width:400px; margin:10px auto;">
+                    <p id="progress-text" style="margin-bottom:5px; text-align:center;">Loading audio features...</p>
+                    <div class="progress">
+                        <div id="progress-bar" class="progress-bar progress-bar-striped active" role="progressbar" style="width:0%"></div>
+                    </div>
+                </div>
                 <div id='single-playlist-contents'>
 
                     <div class="panel panel-default">

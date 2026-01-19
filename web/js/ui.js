@@ -12,6 +12,27 @@ function info(msg) {
     $("#info").text(msg);
 }
 
+// Progress bar functions
+function showProgress(text) {
+    $("#progress-text").text(text || "Loading audio features...");
+    $("#progress-bar").css("width", "0%");
+    $("#audio-features-progress").show();
+}
+
+function updateProgress(current, total, text) {
+    var percent = Math.round((current / total) * 100);
+    $("#progress-bar").css("width", percent + "%");
+    if (text) {
+        $("#progress-text").text(text);
+    } else {
+        $("#progress-text").text("Loading audio features... " + current + "/" + total + " tracks");
+    }
+}
+
+function hideProgress() {
+    $("#audio-features-progress").hide();
+}
+
 // Utility functions
 function formatDuration(dur) {
     var mins = Math.floor(dur / 60);

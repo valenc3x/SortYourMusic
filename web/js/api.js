@@ -163,8 +163,8 @@ function fetchAudioFeaturesBatch(ids) {
         });
 }
 
-// Fetch audio features from ReccoBeats with batching
-function fetchAudioFeatures(ids) {
+// Fetch audio features from ReccoBeats with batching and progress reporting
+function fetchAudioFeatures(ids, progressCallback) {
     if (ids.length === 0) {
         return Q.resolve({ audio_features: [] });
     }
@@ -176,20 +176,30 @@ function fetchAudioFeatures(ids) {
         batches.push(ids.slice(i, i + maxIdsPerCall));
     }
 
-    // Fetch all batches in parallel
-    var batchPromises = batches.map(function(batch) {
-        return fetchAudioFeaturesBatch(batch);
-    });
+    var allFeatures = [];
+    var totalTracks = ids.length;
+    var processedTracks = 0;
 
-    return Q.all(batchPromises)
-        .then(function(results) {
-            // Flatten all batch results into one array
-            var allFeatures = [];
-            results.forEach(function(batchFeatures) {
+    // Fetch batches sequentially for accurate progress reporting
+    function fetchNextBatch(batchIndex) {
+        if (batchIndex >= batches.length) {
+            return Q.resolve({ audio_features: allFeatures });
+        }
+
+        return fetchAudioFeaturesBatch(batches[batchIndex])
+            .then(function(batchFeatures) {
                 allFeatures = allFeatures.concat(batchFeatures);
+                processedTracks += batches[batchIndex].length;
+
+                if (progressCallback) {
+                    progressCallback(processedTracks, totalTracks);
+                }
+
+                return fetchNextBatch(batchIndex + 1);
             });
-            return { audio_features: allFeatures };
-        })
+    }
+
+    return fetchNextBatch(0)
         .catch(function(err) {
             console.log('ReccoBeats fetch failed, returning empty features:', err);
             return { audio_features: [] };
