@@ -10,6 +10,11 @@ function error(msg) {
 
 function info(msg) {
     $("#info").text(msg);
+    if (msg && msg.length > 0) {
+        $("#info-bar").show();
+    } else {
+        $("#info-bar").hide();
+    }
 }
 
 // Progress bar functions
@@ -148,13 +153,32 @@ function playlistFilter(settings, data, dataIndex) {
 }
 
 // Audio playback
+function stopAudio() {
+    var audioEl = audio.get(0);
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load(); // Reset the audio element
+}
+
 function playTrack(track) {
+    stopAudio(); // Stop any currently playing track first
+
+    if (!track.preview_url) {
+        info("No preview available for this track");
+        return false;
+    }
+
+    info("Playing preview...");
     audio.attr('src', track.preview_url);
-    audio.get(0).play();
+    audio.get(0).play().catch(function(e) {
+        info("Could not play preview");
+    });
+    return true;
 }
 
 function stopTrack() {
-    audio.get(0).pause();
+    stopAudio();
+    info("");
 }
 
 // State tracking
