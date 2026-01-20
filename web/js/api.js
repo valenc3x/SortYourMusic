@@ -240,3 +240,69 @@ function fetchPlaylists(uid, callback) {
     };
     getSpotify(url, data, callback);
 }
+
+// iTunes Search API for preview fallback
+function searchItunesPreview(trackName, artistName, durationMs) {
+    return Q.Promise(function(resolve, reject) {
+        var term = encodeURIComponent(trackName + " " + artistName);
+        var callbackName = 'itunesCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        var url = "https://itunes.apple.com/search?term=" + term +
+                  "&media=music&entity=musicTrack&limit=5&callback=" + callbackName;
+
+        // JSONP callback
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            script.remove();
+
+            if (data.results && data.results.length > 0) {
+                var best = findBestItunesMatch(data.results, trackName, artistName, durationMs);
+                resolve(best ? best.previewUrl : null);
+            } else {
+                resolve(null);
+            }
+        };
+
+        var script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            delete window[callbackName];
+            script.remove();
+            resolve(null);
+        };
+        document.head.appendChild(script);
+
+        // Timeout after 5 seconds
+        setTimeout(function() {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                script.remove();
+                resolve(null);
+            }
+        }, 5000);
+    });
+}
+
+function findBestItunesMatch(results, trackName, artistName, durationMs) {
+    var trackLower = trackName.toLowerCase();
+    var artistLower = artistName.toLowerCase();
+
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        if (!r.previewUrl) continue;
+
+        var nameMatch = r.trackName && r.trackName.toLowerCase().includes(trackLower.substring(0, 20));
+        var artistMatch = r.artistName && r.artistName.toLowerCase().includes(artistLower.split(' ')[0]);
+        var durationClose = !durationMs || !r.trackTimeMillis ||
+                           Math.abs(r.trackTimeMillis - durationMs) < 10000; // 10 sec tolerance
+
+        if (nameMatch && artistMatch && durationClose) {
+            return r;
+        }
+    }
+
+    // Fallback: return first result with preview
+    for (var j = 0; j < results.length; j++) {
+        if (results[j].previewUrl) return results[j];
+    }
+    return null;
+}

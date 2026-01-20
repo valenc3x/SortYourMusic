@@ -163,16 +163,21 @@ function stopAudio() {
 function playTrack(track) {
     stopAudio(); // Stop any currently playing track first
 
-    if (!track.preview_url) {
-        info("No preview available for this track");
-        return false;
-    }
+    // Always use iTunes for previews (Spotify previews not available in dev mode)
+    info("Searching for preview...");
+    searchItunesPreview(track.name, track.artists[0].name, track.duration_ms)
+        .then(function(itunesPreviewUrl) {
+            if (itunesPreviewUrl) {
+                info("Playing preview...");
+                audio.attr('src', itunesPreviewUrl);
+                audio.get(0).play().catch(function(e) {
+                    info("Could not play preview");
+                });
+            } else {
+                info("No preview available for this track");
+            }
+        });
 
-    info("Playing preview...");
-    audio.attr('src', track.preview_url);
-    audio.get(0).play().catch(function(e) {
-        info("Could not play preview");
-    });
     return true;
 }
 
