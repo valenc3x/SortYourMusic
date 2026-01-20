@@ -37,36 +37,38 @@ function fetchSinglePlaylist(playlist) {
 
 function smartOrder(items) {
     // Smart ordering tries to equally distribute artists
-    let length = items.length;
+    // Filter out items without valid tracks (local files, unavailable tracks, etc.)
+    let validItems = items.filter(function(item) {
+        return item.track && item.track.artists && item.track.artists.length > 0;
+    });
+
+    if (validItems.length === 0) {
+        return;
+    }
+
+    let length = validItems.length;
     let artist_counts = new Proxy({}, { get: (target, name) => name in target ? target[name] : 0 });
-    _.each(items, function(item, i) {
-        if (item.track) {
-            var track = item.track;
-            var artist = track.artists[0].name;
-            artist_counts[artist]++;
-        }
+    _.each(validItems, function(item, i) {
+        var artist = item.track.artists[0].name;
+        artist_counts[artist]++;
     });
 
     let artist_counts_so_far = new Proxy({}, { get: (target, name) => name in target ? target[name] : 0 });
     let out = [];
-    let all_items = items.slice();
+    let all_items = validItems.slice();
 
     while (all_items.length > 0) {
         let best_delta = 1000;
         let best_item = all_items[0];
         _.each(all_items, function(item, i) {
-            if (item.track) {
-                var track = item.track;
-                let artist = track.artists[0].name;
-                let desired_percentage = artist_counts[artist] / length;
-                let next_percentage = (artist_counts_so_far[artist] + 1) / (out.length + 1);
-                let delta_percentage = Math.abs(next_percentage - desired_percentage);
-                if (delta_percentage < best_delta) {
-                    best_delta = delta_percentage;
-                    best_item = item;
-                }
-            } else {
-                console.log("nope", item);
+            var track = item.track;
+            let artist = track.artists[0].name;
+            let desired_percentage = artist_counts[artist] / length;
+            let next_percentage = (artist_counts_so_far[artist] + 1) / (out.length + 1);
+            let delta_percentage = Math.abs(next_percentage - desired_percentage);
+            if (delta_percentage < best_delta) {
+                best_delta = delta_percentage;
+                best_item = item;
             }
         });
         all_items = all_items.filter(item => item != best_item);
@@ -74,6 +76,16 @@ function smartOrder(items) {
         out.push(best_item);
         artist_counts_so_far[best_item.track.artists[0].name] += 1;
     }
+
+    // Assign smart order to invalid items at the end
+    let invalidItems = items.filter(function(item) {
+        return !item.track || !item.track.artists || item.track.artists.length === 0;
+    });
+    _.each(invalidItems, function(item, i) {
+        if (item.track) {
+            item.track.smart = validItems.length + i;
+        }
+    });
 }
 
 function findDuplicates(playlist) {
@@ -93,6 +105,11 @@ function findDuplicates(playlist) {
 
 function fetchPlaylistTracks(playlist) {
     let all_items = [];
+    let totalTracks = playlist.tracks.total;
+    let processedTracks = 0;
+
+    // Show progress bar once at the start with total track count
+    showProgress("Loading audio features... 0/" + totalTracks + " tracks");
 
     function fetchLoop(url) {
         var tracks;
@@ -123,13 +140,13 @@ function fetchPlaylistTracks(playlist) {
                     }
                 });
 
-                // Show progress bar for audio features loading
-                if (ids.length > 0) {
-                    showProgress("Loading audio features...");
-                }
+                var batchSize = tracks.items.length;
+                var batchStartOffset = processedTracks;
 
-                var progressCallback = function(current, total) {
-                    updateProgress(current, total);
+                // Progress callback that reports cumulative progress
+                var progressCallback = function(currentInBatch, totalInBatch) {
+                    var cumulativeProcessed = batchStartOffset + currentInBatch;
+                    updateProgress(cumulativeProcessed, totalTracks);
                 };
 
                 return Promise.all([fetchAllAlbums(aids), fetchAudioFeatures(ids, progressCallback)]);
@@ -176,13 +193,16 @@ function fetchPlaylistTracks(playlist) {
                     }
                 });
                 console.log('Audio features: ' + matchedCount + '/' + requestedIds.length + ' tracks matched');
-                hideProgress();
-                updateTable(tracks.items);
+
+                // Update cumulative progress
+                processedTracks += tracks.items.length;
+                updateProgress(processedTracks, totalTracks);
 
                 if (tracks.next) {
                     return fetchLoop(tracks.next);
                 } else {
                     console.log("tracks loaded");
+                    hideProgress();
                     smartOrder(all_items);
                     clearTable();
                     updateTable(all_items);
