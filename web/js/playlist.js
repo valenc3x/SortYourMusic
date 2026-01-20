@@ -132,7 +132,7 @@ function fetchPlaylistTracks(playlist) {
                     updateProgress(current, total);
                 };
 
-                return Q.all([fetchAllAlbums(aids), fetchAudioFeatures(ids, progressCallback)]);
+                return Promise.all([fetchAllAlbums(aids), fetchAudioFeatures(ids, progressCallback)]);
             })
             .then(function(results) {
                 var allAlbums = results[0];
@@ -329,7 +329,7 @@ function saveTidsToPlaylist(playlist, tids, replace) {
         })
         .catch(function() {
             console.log("reject");
-            return Q.reject("Trouble saving tracks to the playlist");
+            return Promise.reject("Trouble saving tracks to the playlist");
         });
 }
 
@@ -338,7 +338,7 @@ function createPlaylist(owner, name, isPublic) {
     var json = { name: name, 'public': isPublic };
     return callSpotifyQ('POST', url, json)
         .catch(function() {
-            return Q.reject("Cannot create the new playlist");
+            return Promise.reject("Cannot create the new playlist");
         });
 }
 
@@ -347,6 +347,6 @@ function createOrReusePlaylist(playlist, createNewPlaylist) {
         var sortName = getCurSortName();
         return createPlaylist(curUserID, playlist.name + " ordered by " + sortName, playlist.public);
     } else {
-        return Q(playlist);
+        return Promise.resolve(playlist);
     }
 }

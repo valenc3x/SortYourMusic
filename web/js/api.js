@@ -25,7 +25,7 @@ function callSpotify(type, url, json, callback) {
 
 // Spotify API calls (Promise style)
 function callSpotifyQ(type, url, json) {
-    return Q.Promise(function(resolve, reject, notify) {
+    return new Promise(function(resolve, reject) {
         $.ajax(url, {
             type: type,
             data: JSON.stringify(json),
@@ -68,7 +68,7 @@ function getSpotify(url, data, callback) {
 }
 
 function getSpotifyQ(url, data) {
-    return Q.Promise(function(resolve, reject, notify) {
+    return new Promise(function(resolve, reject) {
         $.ajax(url, {
             dataType: 'json',
             data: data,
@@ -91,7 +91,7 @@ function getSpotifyQ(url, data) {
 
 // ReccoBeats API calls
 function fetchReccoBeats(url) {
-    return Q.Promise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         $.ajax(url, {
             dataType: 'json',
             success: function(data) {
@@ -112,7 +112,7 @@ function fetchReccoBeats(url) {
 // Fetch audio features for a single batch from ReccoBeats
 function fetchAudioFeaturesBatch(ids) {
     if (ids.length === 0) {
-        return Q.resolve([]);
+        return Promise.resolve([]);
     }
 
     var cids = ids.join(',');
@@ -166,7 +166,7 @@ function fetchAudioFeaturesBatch(ids) {
 // Fetch audio features from ReccoBeats with batching and progress reporting
 function fetchAudioFeatures(ids, progressCallback) {
     if (ids.length === 0) {
-        return Q.resolve({ audio_features: [] });
+        return Promise.resolve({ audio_features: [] });
     }
 
     // Batch requests to avoid URL length limits (20 IDs per request)
@@ -183,7 +183,7 @@ function fetchAudioFeatures(ids, progressCallback) {
     // Fetch batches sequentially for accurate progress reporting
     function fetchNextBatch(batchIndex) {
         if (batchIndex >= batches.length) {
-            return Q.resolve({ audio_features: allFeatures });
+            return Promise.resolve({ audio_features: allFeatures });
         }
 
         return fetchAudioFeaturesBatch(batches[batchIndex])
@@ -219,7 +219,7 @@ function fetchAllAlbums(ids) {
         var aids = ids.slice(i, i + maxAlbumsPerCall);
         qs.push(fetchAlbums(aids));
     }
-    return Q.all(qs);
+    return Promise.all(qs);
 }
 
 function fetchCurrentUserProfile(callback) {
@@ -243,7 +243,7 @@ function fetchPlaylists(uid, callback) {
 
 // iTunes Search API for preview fallback
 function searchItunesPreview(trackName, artistName, durationMs) {
-    return Q.Promise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var term = encodeURIComponent(trackName + " " + artistName);
         var callbackName = 'itunesCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         var url = "https://itunes.apple.com/search?term=" + term +
