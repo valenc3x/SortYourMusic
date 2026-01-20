@@ -46,7 +46,7 @@ Access at: http://127.0.0.1:8000/
 - **Authentication**: Uses PKCE (Proof Key for Code Exchange) flow - Spotify deprecated implicit grant for new apps
 - **Audio Features**: Uses ReccoBeats API (https://api.reccobeats.com) instead of Spotify's restricted `/v1/audio-features` endpoint
 - **Batching**: ReccoBeats calls are batched (20 tracks per request) to avoid URL length limits
-- **Audio Previews**: Many tracks have null `preview_url` due to Spotify licensing - handled gracefully with user message
+- **Audio Previews**: Uses iTunes Search API for 30-second previews (Spotify previews unavailable in dev mode)
 
 ## Dependencies
 
