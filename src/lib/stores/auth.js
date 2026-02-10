@@ -9,11 +9,12 @@ let clientId = '';
 let redirectUri = '';
 
 export async function loadConfig() {
-  // In dev, use Vite env vars; in production, fetch from /config
-  if (import.meta.env.VITE_SPOTIFY_CLIENT_ID) {
+  if (import.meta.env.DEV) {
+    // Dev: use compile-time Vite env vars from .env
     clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
     redirectUri = import.meta.env.VITE_SPOTIFY_REDIRECT_URI;
   } else {
+    // Production: fetch from Express /config endpoint
     const res = await fetch('/config');
     const data = await res.json();
     clientId = data.spotifyClientId;
