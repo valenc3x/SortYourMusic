@@ -2,3 +2,7 @@
 *.pyc
 projenv
 songdata
+node_modules
+dist
+.env
+web-legacy/config.js
