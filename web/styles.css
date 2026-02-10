@@ -27,7 +27,10 @@ body {
 
 #main {
     background-image: url(images/saxman.jpg);
-}   
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
 #playlists {
     display:none;
@@ -90,6 +93,7 @@ view) */
 
 #go {
     margin-bottom:20px;
+    display: inline-block;
 }
 
 
@@ -110,6 +114,7 @@ view) */
     color:white;
     background: rgba(50,50,50, 0.3);
     border-radius:15px;
+    text-align: center;
 }
 
 
@@ -181,4 +186,33 @@ view) */
   background-color: #1DB954;
   border-color: #1DB954;
   opacity: 0.65;
+}
+
+/* Help panel */
+#help-wrapper {
+  position: relative;
+}
+
+#help-panel {
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border-radius: 6px;
+  max-width: 500px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+#help-panel dt {
+  width: 80px;
+  text-align: right;
+  color: #1DB954;
+}
+
+#help-panel dd {
+  margin-left: 100px;
 }

@@ -118,6 +118,11 @@ $(document).ready(function() {
         window.location.reload();
     });
 
+    // Help panel toggle
+    $("#help-toggle").on('click', function() {
+        $("#help-panel").slideToggle(200);
+    });
+
     // Setup playlist filter
     $.fn.dataTable.ext.search.push(playlistFilter);
     $('#min-bpm,#max-bpm,#include-double').on('keyup change', function() {

@@ -45,88 +45,6 @@
           </div>
       </div>
 
-        <div class="container worker ">
-          <div class="row features">
-             <div class="col-md-offset-2 col-md-8">
-                    <h2 class="text-center">Get your playlists in order</h2>
-                    <p>
-                    With <b> Sort Your Playlists </b> you can easily order the songs
-                    in any of your playlists be a wide range of parameters. Just
-                    follow these steps:
-                    </p>
-                    <ol>
-                        <li> <b> Login </b> with your Spotify credentials 
-                        <li> <b> Pick </b> your playlist
-                        <li> <b> Sort </b> the playlist by clicking on the column headings in
-                        the playlist table
-                        <li>  <b> Save </b> the sorted playlist to Spotify
-                    </ol>
-
-                    <h2 class="text-center">Tap into the power of Spotify's song attributes</h2>
-                    <p>
-                    <b> Sort Your Music </b> lets you sort your playlist
-                    based on a number of Spotify's song attributes including:
-                    </p>
-
-                    <ol>
-                        <li> <b> Beats Per Minute (BPM)</b> - The tempo of the
-                        song.
-                        <li> <b> Energy</b> - The energy of a song - the higher
-                        the value, the more energtic.
-                        song
-                        <li> <b> Danceability</b> - The higher the value, the
-                        easier it is to dance to this song.
-                        <li> <b> Loudness </b> - The higher the value, the
-                        louder the song.
-                        <li> <b> Valence </b> - The higher the value, the
-                        more positive mood for the song.
-                        <li> <b> Length </b> - The duration of the song.
-                        <li> <b> Acoustic </b> - The higher the value the more
-                        acoustic the song is.
-                        <li> <b> Popularity </b> - The higher the value the more
-                        popular the song is.
-                        <li> <b> A.Sep </b> - maximizes the artist separation in the set
-                        <li> <b> Rnd </b> - A randon number. Sort by this column to shuffle your playlist.
-                    </ol>
-
-                    <h2 class="text-center">FAQ</h2>
-                    <p>
-                        Here are some answers to questions about <b> Sort Your
-                        Music </b>
-                    </p>
-                    <ol>
-                        <li> <b> How was this built? </b> This was created using
-                        the <a
-                        href="http://developer.spotify.com">Spotify</a> API.
-
-                        <li> <b> Where can I learn more about the Spotify song
-                        attributes?</b> See <a
-                        href="https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-analysis">
-                        Acoustic Attributes Overview </a>
-                        <li> <b> Can you add more attributes to the app?  </b>
-                        Yes, but it is a tradeoff between display space,
-                        complexity and utility. Let me know which attributes
-                        you'd like to see.
-                        <li> <b> Any more features planned?</b> - Yes, I'd like
-                        to add a few more features such as:
-                            <ul>
-                                <li> Duplicate track removal
-                                <li> Manual reordering, addition, and deletion.
-                            </ul>
-                        If you have any ideas for new feature, let me know.
-                        <li> <b> Is the source available</b> - Yes, you can find
-                        it on <a href="https://github.com/plamere/SortYourMusic">github</a>
-                        <li> <b> Does Sort Your Music overwrite my playlist when
-                            I save?</b> - 
-                            Only if you chose the 'Overwrite playlist option' otherwise
-                            it creates a copy of the playlist. The new
-                            playlist is called 'Old playlist name sorted by
-                            increasing X', where X is what you sorted the
-                            playlist on. 
-                    </ol>
-              </div> 
-          </div>
-        </div>
 
       <div id="info-bar" style="display:none; position:fixed; top:60px; left:0; right:0; z-index:1000; background:#f0ad4e; color:#fff; padding:10px; text-align:center; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
           <span id='info'></span>
@@ -182,6 +100,29 @@
 
                             <a class="btn btn-primary btn-sm pull-left" id='pick'
                                 role="button">back</a>
+                            <div class="pull-left" id="help-wrapper">
+                            <button class="btn btn-default btn-sm" id="help-toggle"
+                                style="margin-left:8px;" title="Song attribute help">
+                                <i class="fa fa-question-circle"></i>
+                            </button>
+
+                            <div id="help-panel" style="display:none;">
+                                <div class="panel-body">
+                                    <dl class="dl-horizontal">
+                                        <dt>BPM</dt><dd>Beats per minute &mdash; the tempo of the song</dd>
+                                        <dt>Energy</dt><dd>The higher the value, the more energetic the song</dd>
+                                        <dt>Dance</dt><dd>The higher the value, the easier it is to dance to</dd>
+                                        <dt>Loud</dt><dd>The loudness of the song in dB</dd>
+                                        <dt>Valence</dt><dd>The higher the value, the more positive the mood</dd>
+                                        <dt>Length</dt><dd>The duration of the song</dd>
+                                        <dt>Acoustic</dt><dd>The higher the value, the more acoustic the song</dd>
+                                        <dt>Pop.</dt><dd>The higher the value, the more popular the song</dd>
+                                        <dt>A.Sep</dt><dd>Maximizes artist separation in the playlist</dd>
+                                        <dt>Rnd</dt><dd>A random value &mdash; sort by this to shuffle your playlist</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
 
