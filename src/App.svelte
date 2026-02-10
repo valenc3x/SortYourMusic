@@ -102,5 +102,6 @@
 <div class="text-center py-2 text-xs text-gray-500">
   Powered by <a href="https://spotify.com" class="underline hover:text-gray-300">Spotify</a>.
   Created by <a href="https://twitter.com/plamere" class="underline hover:text-gray-300">@plamere</a>
-  with contributions by <a href="https://twitter.com/sonneveld" class="underline hover:text-gray-300">@sonneveld</a>.
+  with contributions by <a href="https://twitter.com/sonneveld" class="underline hover:text-gray-300">@sonneveld</a>,
+  rivalenghost, and Claude.
 </div>
