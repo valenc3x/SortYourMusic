@@ -44,41 +44,58 @@ $(document).ready(function() {
         }
     }
 
-    // Check for errors in query string (PKCE flow)
-    if ('error' in queryArgs) {
-        error("Sorry, I can't read your playlists from Spotify without authorization");
-        setupLoginButton();
-    }
-    // Handle authorization code (PKCE flow)
-    else if ('code' in queryArgs) {
-        info("Completing authentication...");
-        exchangeCodeForToken(queryArgs['code'])
-            .then(function(token) {
-                accessToken = token;
-                // Clean up the URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-                $(".worker").hide();
-                fetchCurrentUserProfile(onUserLoaded);
-            })
-            .catch(function(e) {
-                error("Failed to complete authentication: " + e.message);
-                setupLoginButton();
-            });
-    }
-    // Legacy: check for access_token in hash (implicit flow - deprecated)
-    else if ('access_token' in hashArgs) {
-        accessToken = hashArgs['access_token'];
+    function onSessionRestored(token) {
+        accessToken = token;
         $(".worker").hide();
+        $("#logout").show();
         fetchCurrentUserProfile(onUserLoaded);
     }
-    // Check for errors in hash (legacy implicit flow)
-    else if ('error' in hashArgs) {
-        error("Sorry, I can't read your playlists from Spotify without authorization");
-        setupLoginButton();
-    }
-    else {
-        setupLoginButton();
-    }
+
+    // Try to restore a stored session first
+    restoreSession().then(function(token) {
+        if (token) {
+            onSessionRestored(token);
+            return;
+        }
+
+        // No stored session — check URL params
+        // Check for errors in query string (PKCE flow)
+        if ('error' in queryArgs) {
+            error("Sorry, I can't read your playlists from Spotify without authorization");
+            setupLoginButton();
+        }
+        // Handle authorization code (PKCE flow)
+        else if ('code' in queryArgs) {
+            info("Completing authentication...");
+            exchangeCodeForToken(queryArgs['code'])
+                .then(function(token) {
+                    accessToken = token;
+                    // Clean up the URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    $(".worker").hide();
+                    $("#logout").show();
+                    fetchCurrentUserProfile(onUserLoaded);
+                })
+                .catch(function(e) {
+                    error("Failed to complete authentication: " + e.message);
+                    setupLoginButton();
+                });
+        }
+        // Legacy: check for access_token in hash (implicit flow - deprecated)
+        else if ('access_token' in hashArgs) {
+            accessToken = hashArgs['access_token'];
+            $(".worker").hide();
+            fetchCurrentUserProfile(onUserLoaded);
+        }
+        // Check for errors in hash (legacy implicit flow)
+        else if ('error' in hashArgs) {
+            error("Sorry, I can't read your playlists from Spotify without authorization");
+            setupLoginButton();
+        }
+        else {
+            setupLoginButton();
+        }
+    });
 
     // Event handlers
     $("#save,#dropSave").on('click', function() {
@@ -93,6 +110,12 @@ $(document).ready(function() {
 
     $("#pick").on('click', function() {
         showPlaylists();
+    });
+
+    $("#logout").on('click', function(e) {
+        e.preventDefault();
+        clearStoredTokens();
+        window.location.reload();
     });
 
     // Setup playlist filter

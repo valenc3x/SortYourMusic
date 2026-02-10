@@ -68,7 +68,71 @@ async function exchangeCodeForToken(code) {
 
     const data = await response.json();
     sessionStorage.removeItem('code_verifier');
+    storeTokens(data);
     return data.access_token;
+}
+
+// Token persistence helpers
+
+function storeTokens(data) {
+    localStorage.setItem('spotify_access_token', data.access_token);
+    if (data.refresh_token) {
+        localStorage.setItem('spotify_refresh_token', data.refresh_token);
+    }
+    var expiresAt = Date.now() + (data.expires_in * 1000);
+    localStorage.setItem('spotify_token_expiry', expiresAt.toString());
+}
+
+function getStoredToken() {
+    var token = localStorage.getItem('spotify_access_token');
+    var expiry = localStorage.getItem('spotify_token_expiry');
+    if (!token || !expiry) return null;
+    // Return null if token expires within 5 minutes
+    if (Date.now() > (parseInt(expiry, 10) - 5 * 60 * 1000)) return null;
+    return token;
+}
+
+async function refreshAccessToken() {
+    var refreshToken = localStorage.getItem('spotify_refresh_token');
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    var response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: SPOTIFY_CLIENT_ID,
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+        }),
+    });
+
+    if (!response.ok) {
+        clearStoredTokens();
+        throw new Error('Token refresh failed');
+    }
+
+    var data = await response.json();
+    storeTokens(data);
+    return data.access_token;
+}
+
+async function restoreSession() {
+    var token = getStoredToken();
+    if (token) return token;
+    // Token expired or missing — try refresh
+    var refreshToken = localStorage.getItem('spotify_refresh_token');
+    if (!refreshToken) return null;
+    try {
+        return await refreshAccessToken();
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearStoredTokens() {
+    localStorage.removeItem('spotify_access_token');
+    localStorage.removeItem('spotify_refresh_token');
+    localStorage.removeItem('spotify_token_expiry');
 }
 
 async function authorizeUser() {
