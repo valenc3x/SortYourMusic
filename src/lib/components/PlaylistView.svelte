@@ -5,7 +5,6 @@
   import { loadPlaylist } from '../api/loadPlaylist.js';
   import { searchItunesPreview } from '../api/itunes.js';
   import ProgressBar from './ProgressBar.svelte';
-  import InfoBar from './InfoBar.svelte';
   import SortableTable from './SortableTable.svelte';
   import BpmFilter from './BpmFilter.svelte';
   import SaveButton from './SaveButton.svelte';
@@ -59,7 +58,6 @@
 </script>
 
 <ProgressBar />
-<InfoBar />
 <audio bind:this={audioEl}></audio>
 
 <div class="mt-14 p-4 max-w-7xl mx-auto text-white">
@@ -71,14 +69,25 @@
       >back</button>
       <HelpPanel />
     </div>
-    <h2 class="text-xl font-bold">
-      <a href={playlist.uri} class="hover:underline">{playlist.name}</a>
-    </h2>
     <div>
       {#if !loading}
         <SaveButton />
       {/if}
     </div>
+  </div>
+
+  <div class="mb-4 px-3 py-2 rounded-lg bg-gray-800 flex items-center gap-3">
+    <h2 class="text-xl font-bold">
+      <a href={playlist.uri} class="hover:underline">{playlist.name}</a>
+    </h2>
+    {#if $infoMessage}
+      <span class="ml-auto flex items-center gap-2 text-sm text-amber-400">
+        <svg class="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v6.114A4.369 4.369 0 005 11a3 3 0 100 6c1.657 0 3-1.343 3-3V7.82l8-1.6v5.894A4.37 4.37 0 0015 12a3 3 0 100 6c1.657 0 3-1.343 3-3V3z"/>
+        </svg>
+        {$infoMessage}
+      </span>
+    {/if}
   </div>
 
   {#if loading}

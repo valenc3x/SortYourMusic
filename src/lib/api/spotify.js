@@ -46,6 +46,7 @@ export async function fetchCurrentUserProfile() {
 
 export async function fetchAllPlaylists(userId) {
   const playlists = [];
+  const seen = new Set();
   let url = `https://api.spotify.com/v1/users/${userId}/playlists`;
   let params = { limit: 50, offset: 0 };
 
@@ -54,7 +55,8 @@ export async function fetchAllPlaylists(userId) {
     if (!data) break;
 
     for (const playlist of data.items) {
-      if (playlist.tracks.total > 0) {
+      if (playlist.tracks.total > 0 && !seen.has(playlist.id)) {
+        seen.add(playlist.id);
         playlists.push(playlist);
       }
     }
