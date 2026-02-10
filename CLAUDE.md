@@ -1,66 +1,91 @@
 # SortYourMusic
 
-A client-side web app that sorts Spotify playlists by audio features (tempo, energy, danceability, etc.).
+A web app that sorts Spotify playlists by audio features (tempo, energy, danceability, etc.).
 
 ## Project Structure
 
 ```
-web/
-├── index.html          # Main HTML page
-├── config.js           # Spotify credentials (not committed)
-├── js/
-│   ├── auth.js         # PKCE authentication flow
-│   ├── api.js          # Spotify and ReccoBeats API calls
-│   ├── ui.js           # UI utilities, table, state management
-│   ├── playlist.js     # Playlist loading, saving, display
-│   └── app.js          # Global variables and initialization
-├── lib/                # Third-party libraries (jQuery, Bootstrap, etc.)
-├── styles.css          # Custom styles
-└── images/             # Static assets
+SortYourMusic/
+  web-legacy/              # Old vanilla JS app (preserved for reference)
+  src/
+    lib/
+      stores/
+        auth.js            # Auth state (accessToken, currentUser)
+        playlist.js        # Playlist state (playlists, tracks, sort, filter)
+        ui.js              # UI state (infoMessage, progress, selectedTrack)
+      api/
+        spotify.js         # Spotify API (fetch-based)
+        reccobeats.js      # ReccoBeats API (batched audio features)
+        itunes.js          # iTunes Search API (audio previews)
+        loadPlaylist.js    # Playlist loading orchestration
+      utils/
+        pkce.js            # PKCE helpers
+        format.js          # formatDuration, inRange
+        smartOrder.js      # Artist separation algorithm
+      components/
+        Navbar.svelte
+        LoginHero.svelte
+        PlaylistList.svelte
+        PlaylistRow.svelte
+        PlaylistView.svelte
+        SortableTable.svelte
+        SortableHeader.svelte
+        TrackRow.svelte
+        BpmFilter.svelte
+        SaveButton.svelte
+        HelpPanel.svelte
+        ProgressBar.svelte
+        InfoBar.svelte
+    App.svelte             # Root component with view switching
+    main.js                # Vite entry point
+    app.css                # Tailwind directives
+  public/images/           # Static assets
+  server/index.js          # Express server (prod)
+  index.html               # Vite HTML entry
+  vite.config.js
+  package.json
+  .env / .env.example
+  railway.toml
 ```
 
 ## Running Locally
 
 ```bash
-cd web
-python3 -m http.server 8000 --bind 127.0.0.1
+npm install
+npm run dev
 ```
 
-Access at: http://127.0.0.1:8000/
-
-**Important**: Must use `127.0.0.1`, not `localhost` - Spotify requires explicit IP in redirect URIs.
+Access at: http://127.0.0.1:5173/
 
 ## Setup Requirements
 
 1. Create a Spotify Developer App at https://developer.spotify.com/dashboard
-2. Set redirect URI to `http://127.0.0.1:8000/`
+2. Set redirect URI to `http://127.0.0.1:5173/`
 3. Add your email to User Management (app is in dev mode)
-4. Copy your Client ID to `web/config.js`:
-   ```javascript
-   var SPOTIFY_CLIENT_ID = 'your-client-id-here';
-   var SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:8000/';
+4. Copy your Client ID to `.env`:
    ```
+   VITE_SPOTIFY_CLIENT_ID=your-client-id-here
+   VITE_SPOTIFY_REDIRECT_URI=http://127.0.0.1:5173/
+   ```
+
+## Production Build
+
+```bash
+npm run build
+SPOTIFY_CLIENT_ID=xxx SPOTIFY_REDIRECT_URI=https://your-domain/ node server/index.js
+```
+
+The Express server serves the built app and exposes `/config` (returns env vars as JSON) and `/health` endpoints.
+
+## Deployment (Railway)
+
+Set env vars `SPOTIFY_CLIENT_ID` and `SPOTIFY_REDIRECT_URI` in Railway. The `railway.toml` handles build and start commands.
 
 ## Key Technical Details
 
-- **Authentication**: Uses PKCE (Proof Key for Code Exchange) flow - Spotify deprecated implicit grant for new apps
-- **Audio Features**: Uses ReccoBeats API (https://api.reccobeats.com) instead of Spotify's restricted `/v1/audio-features` endpoint
-- **Batching**: ReccoBeats calls are batched (20 tracks per request) to avoid URL length limits
-- **Audio Previews**: Uses iTunes Search API for 30-second previews (Spotify previews unavailable in dev mode)
-
-## Dependencies
-
-- jQuery 1.11.1
-- Bootstrap 3.x
-- DataTables 1.13.1
-- Underscore.js
-- Q.js (Promises)
-
-## Config File
-
-`web/config.js` contains Spotify credentials and is NOT committed to git. Example:
-```javascript
-"use strict";
-var SPOTIFY_CLIENT_ID = 'your-client-id';
-var SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:8000/';
-```
+- **Stack**: Svelte 5, Vite, Tailwind CSS v4, Express
+- **Authentication**: PKCE flow with token persistence in localStorage
+- **Audio Features**: ReccoBeats API (batched 20 tracks/request)
+- **Audio Previews**: iTunes Search API via fetch
+- **Config Injection**: Dev uses Vite `import.meta.env.VITE_*` from `.env`; production uses Express `/config` endpoint
+- **No router**: 3 views (login, playlists, playlist) managed by a `view` state variable
