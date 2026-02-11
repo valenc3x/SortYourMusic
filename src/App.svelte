@@ -2,22 +2,25 @@
   import { onMount } from 'svelte';
   import { accessToken, currentUser, loadConfig, restoreSession, exchangeCodeForToken, logout } from './lib/stores/auth.js';
   import { fetchCurrentUserProfile, fetchAllPlaylists } from './lib/api/spotify.js';
-  import { playlists, currentPlaylist, currentUserId } from './lib/stores/playlist.js';
+  import { playlists, currentPlaylist, currentUserId, playlistsLoading } from './lib/stores/playlist.js';
   import Navbar from './lib/components/Navbar.svelte';
   import LoginHero from './lib/components/LoginHero.svelte';
   import PlaylistList from './lib/components/PlaylistList.svelte';
   import PlaylistView from './lib/components/PlaylistView.svelte';
 
   let view = $state('loading');
-  let playlistsLoading = $state(false);
   let selectedPlaylist = $state(null);
 
   async function loadUserPlaylists(userId) {
-    playlistsLoading = true;
+    playlistsLoading.set(true);
+    playlists.set([]);
     view = 'playlists';
-    const pls = await fetchAllPlaylists(userId);
-    playlists.set(pls);
-    playlistsLoading = false;
+    await fetchAllPlaylists(userId, {
+      onBatch(batch) {
+        playlists.update(prev => [...prev, ...batch]);
+      }
+    });
+    playlistsLoading.set(false);
   }
 
   function handleSelectPlaylist(playlist) {
@@ -91,7 +94,7 @@
     playlists={$playlists}
     currentUserId={$currentUserId}
     onSelectPlaylist={handleSelectPlaylist}
-    loading={playlistsLoading}
+    loading={$playlistsLoading}
   />
 {:else if view === 'playlist'}
   {#key selectedPlaylist?.id}

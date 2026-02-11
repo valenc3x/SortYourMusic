@@ -44,7 +44,7 @@ export async function fetchCurrentUserProfile() {
   return spotifyGet('https://api.spotify.com/v1/me');
 }
 
-export async function fetchAllPlaylists(userId) {
+export async function fetchAllPlaylists(userId, { onBatch } = {}) {
   const playlists = [];
   const seen = new Set();
   let url = `https://api.spotify.com/v1/users/${userId}/playlists`;
@@ -54,12 +54,16 @@ export async function fetchAllPlaylists(userId) {
     const data = await spotifyGet(url, params);
     if (!data) break;
 
+    const batch = [];
     for (const playlist of data.items) {
       if (playlist.tracks.total > 0 && !seen.has(playlist.id)) {
         seen.add(playlist.id);
-        playlists.push(playlist);
+        batch.push(playlist);
       }
     }
+
+    playlists.push(...batch);
+    if (onBatch && batch.length > 0) onBatch(batch);
 
     url = data.next;
     params = null; // next URL already includes params
