@@ -4,6 +4,7 @@ export const playlists = writable([]);
 export const currentPlaylist = writable(null);
 export const currentUserId = writable(null);
 export const tracks = writable([]);
+export const tracksLoading = writable(false);
 export const albumDates = writable({});
 export const sortColumn = writable(0);
 export const sortDirection = writable('asc');

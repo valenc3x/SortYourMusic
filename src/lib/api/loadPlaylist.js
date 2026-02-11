@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { accessToken } from '../stores/auth.js';
-import { tracks, albumDates, sortColumn, sortDirection, bpmMin, bpmMax, includeDoubleBpm, savedState, currentPlaylist } from '../stores/playlist.js';
+import { tracks, tracksLoading, albumDates, sortColumn, sortDirection, bpmMin, bpmMax, includeDoubleBpm, savedState, currentPlaylist } from '../stores/playlist.js';
 import { showProgress, updateProgress, hideProgress } from '../stores/ui.js';
 import { fetchAllAlbums } from './spotify.js';
 import { fetchAudioFeatures } from './reccobeats.js';
@@ -18,6 +18,7 @@ async function spotifyGet(url) {
 export async function loadPlaylist(playlist) {
   // Reset state
   tracks.set([]);
+  tracksLoading.set(true);
   sortColumn.set(0);
   sortDirection.set('asc');
   bpmMin.set(NaN);
@@ -98,24 +99,37 @@ export async function loadPlaylist(playlist) {
     processedTracks += trackData.items.length;
     updateProgress(processedTracks, totalTracks);
 
+    // Progressively append this batch's tracks to the store
+    const batchTracks = trackData.items
+      .filter(item => item.track)
+      .map(item => {
+        const t = item.track;
+        t.rnd = Math.random() * 10000;
+        t.releaseDate = (t.album?.id && dates[t.album.id]) || '';
+        return t;
+      });
+
+    tracks.update(existing => [...existing, ...batchTracks]);
+
     url = trackData.next;
   }
 
-  hideProgress();
+  // Compute smartOrder on the full set (needs all tracks)
   smartOrder(allItems);
 
-  // Build final track list with all computed fields
+  // Rebuild final track list with smart values included
   const finalTracks = allItems
     .filter(item => item.track)
     .map(item => {
       const t = item.track;
-      t.rnd = Math.random() * 10000;
-      t.releaseDate = (t.album?.id && dates[t.album.id]) || '';
+      // rnd and releaseDate already set during progressive loading
       return t;
     });
 
   albumDates.set(dates);
   tracks.set(finalTracks);
+  tracksLoading.set(false);
+  hideProgress();
 
   // Save initial state
   savedState.set({ order: [0, 'asc'], minBpm: NaN, maxBpm: NaN, includeDouble: true });

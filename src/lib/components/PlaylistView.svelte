@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { sortedTracks } from '../stores/playlist.js';
+  import { sortedTracks, tracksLoading } from '../stores/playlist.js';
   import { selectedTrackId, infoMessage } from '../stores/ui.js';
   import { loadPlaylist } from '../api/loadPlaylist.js';
   import { searchItunesPreview } from '../api/itunes.js';
@@ -11,12 +11,10 @@
   import HelpPanel from './HelpPanel.svelte';
 
   let { playlist, onBack } = $props();
-  let loading = $state(true);
   let audioEl = $state(null);
 
-  onMount(async () => {
-    await loadPlaylist(playlist);
-    loading = false;
+  onMount(() => {
+    loadPlaylist(playlist);
   });
 
   function handleTrackClick(track) {
@@ -70,7 +68,7 @@
       <HelpPanel />
     </div>
     <div>
-      {#if !loading}
+      {#if !$tracksLoading}
         <SaveButton />
       {/if}
     </div>
@@ -90,11 +88,11 @@
     {/if}
   </div>
 
-  {#if loading}
+  {#if $tracksLoading && $sortedTracks.length === 0}
     <div class="text-center py-12">
       <img src="/images/ajaxSpinner.gif" alt="Loading" class="w-16 mx-auto mb-4">
     </div>
-  {:else}
+  {:else if $sortedTracks.length > 0}
     <BpmFilter />
     <SortableTable onTrackClick={handleTrackClick} />
   {/if}
